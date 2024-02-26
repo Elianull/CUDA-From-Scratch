@@ -5,6 +5,5 @@ When executing Docker commands on Windows within a Unix-like environment (e.g., 
 Here's how to run your Docker container with GPU support and volume mounting, treating paths in a Unix-like manner:
 
 ```bash
-# Disable MSYS path conversion temporarily
-MSYS_NO_PATHCONV=1 docker run --rm --gpus all -v ${PWD}:/usr/src/app <Docker container> <Opening script> <Command line arguments>
+MSYS_NO_PATHCONV=1 docker run --rm --gpus all -v ${PWD}:/usr/src/app cuda-compiler ./run_cuda_app.sh <CUDA File> <args>
 ```
