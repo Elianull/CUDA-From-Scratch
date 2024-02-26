@@ -1,5 +1,5 @@
 #include <iostream>
-#include <cstdlib> // For atoi and strtol
+#include <cstdlib>
 #include <cuda_runtime.h>
 
 #define BLOCK_SIZE 256 // Number of threads per block
