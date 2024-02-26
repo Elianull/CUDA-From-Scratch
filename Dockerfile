@@ -1,9 +1,11 @@
 FROM nvidia/cuda:12.3.1-runtime-ubuntu20.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install build essentials and CUDA toolkit
 RUN apt-get update && apt-get install -y \
     build-essential \
-    cuda-toolkit-11-2
+    cuda-toolkit-12-3
 
 # Set the working directory in the container
 WORKDIR /usr/src/app

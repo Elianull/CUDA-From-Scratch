@@ -1,15 +1,17 @@
 #!/bin/bash
 
-# Check if a file name is provided
-if [ "$#" -ne 1 ]; then
-    echo "Usage: $0 <cuda-file.cu>"
+# Check if at least a file name is provided
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $0 <cuda-file.cu> [app arguments]"
     exit 1
 fi
 
 FILENAME=$1
+BASENAME=$(basename "$FILENAME" .cu)
+shift
 
-# Compile the CUDA file
-nvcc -o cuda_app $FILENAME
+BINDIR=./bin
+mkdir -p "$BINDIR"
 
-# Run the compiled program
-./cuda_app
+nvcc -o "${BINDIR}/${BASENAME}" "$FILENAME"
+"${BINDIR}/${BASENAME}" "$@"
