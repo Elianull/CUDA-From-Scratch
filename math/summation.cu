@@ -21,35 +21,35 @@ __global__ void summation(int *input, int *output, int len) {
     }
 }
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <element1> <element2> ... <elementN>" << std::endl;
-        return 1;
-    }
+// int main(int argc, char *argv[]) {
+//     if (argc < 2) {
+//         std::cerr << "Usage: " << argv[0] << " <element1> <element2> ... <elementN>" << std::endl;
+//         return 1;
+//     }
 
-    int N = argc - 1;
-    int *input = new int[N];
-    for (int i = 0; i < N; ++i) {
-        input[i] = std::strtol(argv[i + 1], nullptr, 10);
-    }
+//     int N = argc - 1;
+//     int *input = new int[N];
+//     for (int i = 0; i < N; ++i) {
+//         input[i] = std::strtol(argv[i + 1], nullptr, 10);
+//     }
 
-    int *d_input, *d_output;
-    cudaMalloc(&d_input, N * sizeof(int));
-    cudaMalloc(&d_output, sizeof(int));
+//     int *d_input, *d_output;
+//     cudaMalloc(&d_input, N * sizeof(int));
+//     cudaMalloc(&d_output, sizeof(int));
 
-    cudaMemcpy(d_input, input, N * sizeof(int), cudaMemcpyHostToDevice);
+//     cudaMemcpy(d_input, input, N * sizeof(int), cudaMemcpyHostToDevice);
 
-    // Assuming N is not too large for a single block
-    summation<<<1, BLOCK_SIZE>>>(d_input, d_output, N);
+//     // Assuming N is not too large for a single block
+//     summation<<<1, BLOCK_SIZE>>>(d_input, d_output, N);
 
-    int result;
-    cudaMemcpy(&result, d_output, sizeof(int), cudaMemcpyDeviceToHost);
+//     int result;
+//     cudaMemcpy(&result, d_output, sizeof(int), cudaMemcpyDeviceToHost);
 
-    std::cout << "Sum: " << result << std::endl;
+//     std::cout << "Sum: " << result << std::endl;
 
-    delete[] input;
-    cudaFree(d_input);
-    cudaFree(d_output);
+//     delete[] input;
+//     cudaFree(d_input);
+//     cudaFree(d_output);
 
-    return 0;
-}
+//     return 0;
+// }
