@@ -1,5 +1,3 @@
-"""
-
 # CUDA Programming: Function Implementations and Lessons Learned
 
 
@@ -57,10 +55,4 @@ This document outlines the CUDA functions I've implemented, focusing on key take
   - First run with making functions massively parallel
 
   - Reached a point of needing to make performance precision tradeoffs.
-
-
-
-
-"""
-
 
