@@ -54,7 +54,7 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
  
 
-  ### Linear Regression
+### Linear Regression
 
 
 - **Functionality**: Performs linear regression via the Least Squares method.
