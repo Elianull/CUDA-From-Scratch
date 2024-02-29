@@ -6,7 +6,7 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
 
 
-### summation.cu
+### Summation
 
 
 - **Functionality**: Implements discrete summation to calculate averages.
@@ -17,7 +17,7 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
 
 
-### product.cu
+### Product
 
 
 - **Functionality**: Calculates the product of an array.
@@ -28,7 +28,7 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
 
 
-### mean.cu
+### Mean
 
 
 - **Functionality**: Implements a discrete working average.
@@ -39,7 +39,7 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
 
 
-### sqrt.cu
+### Square root
 
 
 - **Functionality**: Calculates the square root using the Newton-Raphson method.
@@ -51,6 +51,22 @@ This document outlines the CUDA functions I've implemented, focusing on key take
   - First run with making functions massively parallel
 
   - Reached a point of needing to make performance precision tradeoffs.
+
+ 
+
+  ### Linear Regression
+
+
+- **Functionality**: Performs linear regression via the Least Squares method.
+
+- **Lessons Learned**:
+
+  - Least squares!
+
+  - Dependencies here put me through the ringer. Ended up modifying my compilation script to automatically resolve that, using compiler variables to allow me to keep the main methods for testing.
+
+  - Synchronizing memory across many kernels
+
 
 
 
@@ -68,8 +84,6 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 - Matrix multiplication
 
 - Vector normalization
-
-- Linear regression
 
 - Fast fourier transform
 
