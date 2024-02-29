@@ -74,21 +74,13 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
 
 - Parallel division
-
 - Vector addition
-
 - Scalar multiplication
-
 - Dot product
-
 - Matrix multiplication
-
 - Vector normalization
-
 - Fast fourier transform
-
 - Eigenvalue calculation
-
 - Eigenvector calculation
-
 - Random number generation
+- Black scholes equation
