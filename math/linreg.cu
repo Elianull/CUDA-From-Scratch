@@ -50,7 +50,6 @@ void computeLinearRegression(float *d_x_values, float *d_y_values, int N, float 
 
     linearRegression<<<1, 1>>>(d_sums, d_m, d_b, N);
 
-    // Cleanup
     cudaFree(d_sums);
     cudaFree(d_xy_values);
     cudaFree(d_x2_values);
