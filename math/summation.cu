@@ -1,11 +1,12 @@
 #include <iostream>
 #include <cstdlib>
 #include <cuda_runtime.h>
+#include "summation.cuh"
 
 #define BLOCK_SIZE 256 // Number of threads per block
 
-__global__ void summation(int *input, int *output, int len) {
-    __shared__ int shared[BLOCK_SIZE];
+__global__ void summation(float *input, float *output, int len) {
+    __shared__ float shared[BLOCK_SIZE];
     int tid = threadIdx.x;
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     shared[tid] = (i < len) ? input[i] : 0;
@@ -21,35 +22,38 @@ __global__ void summation(int *input, int *output, int len) {
     }
 }
 
-// int main(int argc, char *argv[]) {
-//     if (argc < 2) {
-//         std::cerr << "Usage: " << argv[0] << " <element1> <element2> ... <elementN>" << std::endl;
-//         return 1;
-//     }
+#ifdef COMPILE_MAIN
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <element1> <element2> ... <elementN>" << std::endl;
+        return 1;
+    }
 
-//     int N = argc - 1;
-//     int *input = new int[N];
-//     for (int i = 0; i < N; ++i) {
-//         input[i] = std::strtol(argv[i + 1], nullptr, 10);
-//     }
+    int N = argc - 1;
+    float *input = new float[N];
+    for (int i = 0; i < N; ++i) {
+        //input[i] = std::strtol(argv[i + 1], nullptr, 10);
+        input[i] = std::atof(argv[i+1]);
+    }
 
-//     int *d_input, *d_output;
-//     cudaMalloc(&d_input, N * sizeof(int));
-//     cudaMalloc(&d_output, sizeof(int));
+    float *d_input, *d_output;
+    cudaMalloc(&d_input, N * sizeof(float));
+    cudaMalloc(&d_output, sizeof(float));
 
-//     cudaMemcpy(d_input, input, N * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_input, input, N * sizeof(float), cudaMemcpyHostToDevice);
 
-//     // Assuming N is not too large for a single block
-//     summation<<<1, BLOCK_SIZE>>>(d_input, d_output, N);
+    // Assuming N is not too large for a single block
+    summation<<<1, BLOCK_SIZE>>>(d_input, d_output, N);
 
-//     int result;
-//     cudaMemcpy(&result, d_output, sizeof(int), cudaMemcpyDeviceToHost);
+    float result;
+    cudaMemcpy(&result, d_output, sizeof(float), cudaMemcpyDeviceToHost);
 
-//     std::cout << "Sum: " << result << std::endl;
+    std::cout << "Sum: " << result << std::endl;
 
-//     delete[] input;
-//     cudaFree(d_input);
-//     cudaFree(d_output);
+    delete[] input;
+    cudaFree(d_input);
+    cudaFree(d_output);
 
-//     return 0;
-// }
+    return 0;
+}
+#endif

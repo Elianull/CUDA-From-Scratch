@@ -1,12 +1,12 @@
 #include <iostream>
 #include <cstdlib>
 #include <cuda_runtime.h>
-#include "summation.cu"
+#include "mean.cuh"
 
 #define BLOCK_SIZE 256 // Number of threads per block
 
-__global__ void mean(int *input, int *output, int len) {
-    __shared__ int shared[BLOCK_SIZE];
+__global__ void mean(float *input, float *output, int len) {
+    __shared__ float shared[BLOCK_SIZE];
     int tid = threadIdx.x;
     int i = blockIdx.x * blockDim.x + threadIdx.x;
     shared[tid] = (i < len) ? input[i] : 0;
@@ -22,32 +22,7 @@ __global__ void mean(int *input, int *output, int len) {
     }
 }
 
-// void mean(int *input, int *output, int len) {
-//     int *d_input, *d_sum, sumResult;
-//     int blockSize = BLOCK_SIZE;
-//     int numBlocks = (len + blockSize - 1) / blockSize;
-
-//     cudaMalloc(&d_input, len*sizeof(int));
-//     cudaMalloc(&d_sum, sizeof(int));
-
-//     cudaMemcpy(d_input, input, len*sizeof(int), cudaMemcpyHostToDevice);
-
-//     summation<<<numBlocks, BLOCK_SIZE>>>(d_input, d_sum, len);
-//     cudaDeviceSynchronize();
-
-//     cudaMemcpy(&sumResult, d_sum, sizeof(int), cudaMemcpyDeviceToHost);
-
-//     *output = static_cast<float>(sumResult) / len;
-
-//     cudaFree(d_input);
-//     cudaFree(d_sum);
-// }
-
-// __global__ void mean(int *input, int *output, int len) {
-//     calculateMean<<<1, BLOCK_SIZE>>>(input, output, len);
-// }
-
-
+#ifdef COMPILE_MAIN
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <element1> <element2> ... <elementN>" << std::endl;
@@ -55,21 +30,21 @@ int main(int argc, char *argv[]) {
     }
 
     int N = argc - 1;
-    int *input = new int[N];
+    float *input = new float[N];
     for (int i = 0; i < N; ++i) {
-        input[i] = std::strtol(argv[i + 1], nullptr, 10);
+        input[i] = std::atof(argv[i + 1]);
     }
 
-    int *d_input, *d_output;
-    cudaMalloc(&d_input, N * sizeof(int));
-    cudaMalloc(&d_output, sizeof(int));
+    float *d_input, *d_output;
+    cudaMalloc(&d_input, N * sizeof(float));
+    cudaMalloc(&d_output, sizeof(float));
 
-    cudaMemcpy(d_input, input, N * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_input, input, N * sizeof(float), cudaMemcpyHostToDevice);
 
     // Assuming N is not too large for a single block
     mean<<<1, BLOCK_SIZE>>>(d_input, d_output, N);
 
-    int result;
+    float result;
     cudaMemcpy(&result, d_output, sizeof(int), cudaMemcpyDeviceToHost);
 
     std::cout << "Mean: " << result << std::endl;
@@ -78,3 +53,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+#endif

@@ -21,6 +21,7 @@ __global__ void summation(int *input, int *output, int len) {
     }
 }
 
+#ifdef COMPILE_MAIN
 int main(int argc, char *argv[]) {
     if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " <element1> <element2> ... <elementN>" << std::endl;
@@ -53,3 +54,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+#endif
