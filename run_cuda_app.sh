@@ -26,7 +26,7 @@ echo "Compiling dependency CUDA files without 'COMPILE_MAIN':"
 for file in $(find "$DIRNAME" -maxdepth 1 -type f -name '*.cu' ! -name "$(basename "$FILENAME")"); do
     OBJ_NAME="${BINDIR}/$(basename "$file" .cu).o"
     echo "Compiling $file -> $OBJ_NAME"
-    nvcc -c "$file" -o "$OBJ_NAME"
+    nvcc -c "$file" -o "$OBJ_NAME" &
 done
 
 # Link all object files including the main .cu file object
