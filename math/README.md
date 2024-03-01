@@ -69,6 +69,15 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
 
 
+### Dot product
+
+
+- **Functionality**: Calculates dot product
+
+- **Lessons Learned**:
+
+  - The first kernel implementation that did not require me to learn anything to implement
+
 
 ## TODOs
 
@@ -76,7 +85,6 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 - Parallel division
 - Vector addition
 - Scalar multiplication
-- Dot product
 - Matrix multiplication
 - Vector normalization
 - Fast fourier transform
