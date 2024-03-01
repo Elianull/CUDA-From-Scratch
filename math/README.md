@@ -79,6 +79,7 @@ This document outlines the CUDA functions I've implemented, focusing on key take
   - The first kernel implementation that did not require me to learn anything to implement
 
 
+
 ## TODOs
 
 
