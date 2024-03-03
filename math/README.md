@@ -83,7 +83,7 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 ### Matrix multiplication
 
 
-- **Functionality**: Performs matrix multiplication using shared memory and tile-based decomposition to improve data locality and throughput.
+- **Functionality**: Performs matrix multiplication using shared memory and tile-based decomposition.
 
 - **Lessons Learned**:
 
