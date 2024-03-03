@@ -72,11 +72,26 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 ### Dot product
 
 
-- **Functionality**: Calculates dot product
+- **Functionality**: Calculates dot product.
 
 - **Lessons Learned**:
 
   - The first kernel implementation that did not require me to learn anything to implement
+
+
+
+### Matrix multiplication
+
+
+- **Functionality**: Performs matrix multiplication using shared memory and tile-based decomposition to improve data locality and throughput.
+
+- **Lessons Learned**:
+
+  - First implementation of a function that had a delay in response time, thus leading me to optimization.
+ 
+  - Shared memory implementation marked a significant speed improvement
+ 
+  - Debugging shared memory proved difficult when everything is not perfectly in sync
 
 
 
@@ -86,7 +101,6 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 - Parallel division
 - Vector addition
 - Scalar multiplication
-- Matrix multiplication
 - Vector normalization
 - Fast fourier transform
 - Eigenvalue calculation
