@@ -95,6 +95,18 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
 
 
+### Dot product
+
+
+- **Functionality**: Calculates standard deviation
+
+- **Lessons Learned**:
+
+  - Overall straightforward, but an important review in parallel reduction
+    
+  - Compilation script fixes in the case of dependencies
+
+
 ## TODOs
 
 
