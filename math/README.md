@@ -95,7 +95,7 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
 
 
-### Dot product
+### Standard deviation
 
 
 - **Functionality**: Calculates standard deviation
