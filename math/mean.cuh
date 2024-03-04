@@ -5,6 +5,6 @@
 
 #define BLOCK_SIZE 256
 
-__global__ void mean(int *input, int *output, int len);
+__global__ void mean(float *input, float *output, int len);
 
 #endif

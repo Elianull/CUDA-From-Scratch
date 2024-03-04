@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include "dotprod.cuh"
 
+#define TILE_WIDTH 16
+
 // Function to generate a matrix with random values
 std::vector<std::vector<float>> generateRandomMatrix(int rows, int cols) {
     std::vector<std::vector<float>> matrix(rows, std::vector<float>(cols));
@@ -122,7 +124,7 @@ int main(int argc, char* argv[]) {
     cudaMemcpy(d_A, A_flat, m * n * sizeof(float), cudaMemcpyHostToDevice);
     cudaMemcpy(d_B, B_flat, n * p * sizeof(float), cudaMemcpyHostToDevice);
 
-    const int TILE_WIDTH = 16;
+    //const int TILE_WIDTH = 16;
     dim3 threadsPerBlock(TILE_WIDTH, TILE_WIDTH);
     dim3 blocksPerGrid((p + TILE_WIDTH - 1) / TILE_WIDTH, (m + TILE_WIDTH - 1) / TILE_WIDTH);
 

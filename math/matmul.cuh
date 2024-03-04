@@ -4,6 +4,7 @@
 #include <cuda_runtime.h>
 
 #define BLOCK_SIZE 256
+#define TILE_WIDTH 16
 
 __global__ void matmul(float* A, float* B, float* C, int ARows, int ACols, int BCols);
 
