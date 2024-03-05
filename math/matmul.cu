@@ -8,7 +8,7 @@
 #define TILE_WIDTH 16
 
 // Function to generate a matrix with random values
-std::vector<std::vector<float>> generateRandomMatrix(int rows, int cols) {
+inline std::vector<std::vector<float>> generateRandomMatrix(int rows, int cols) {
     std::vector<std::vector<float>> matrix(rows, std::vector<float>(cols));
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -24,7 +24,7 @@ std::vector<std::vector<float>> generateRandomMatrix(int rows, int cols) {
 }
 
 // Function to print a matrix
-void printMatrix(const std::vector<std::vector<float>>& matrix) {
+inline void printMatrix(const std::vector<std::vector<float>>& matrix) {
     for (const auto &row : matrix) {
         for (auto elem : row) {
             std::cout << std::fixed << std::setprecision(4) << elem << " ";
@@ -33,7 +33,7 @@ void printMatrix(const std::vector<std::vector<float>>& matrix) {
     }
 }
 
-float* flattenMatrix(const std::vector<std::vector<float>>& matrix, int rows, int cols) {
+inline float* flattenMatrix(const std::vector<std::vector<float>>& matrix, int rows, int cols) {
     float* flat = new float[rows * cols];
     for (int i = 0; i < rows; ++i) {
         for (int j = 0; j < cols; ++j) {
@@ -57,7 +57,7 @@ float* flattenMatrix(const std::vector<std::vector<float>>& matrix, int rows, in
 //     }
 // }
 
-__global__ void matmul(float* A, float* B, float* C, int ARows, int ACols, int BCols) {
+__global__ void matmulKernel(float* A, float* B, float* C, int ARows, int ACols, int BCols) {
     __shared__ float Asub[TILE_WIDTH][TILE_WIDTH];
     __shared__ float Bsub[TILE_WIDTH][TILE_WIDTH];
     
@@ -90,6 +90,58 @@ __global__ void matmul(float* A, float* B, float* C, int ARows, int ACols, int B
         C[row*BCols + col] = sum;
 }
 
+void matmul(const std::vector<std::vector<float>>& matrixA,
+            const std::vector<std::vector<float>>& matrixB,
+            std::vector<std::vector<float>>& matrixC,
+            int ARows, int ACols, int BCols) {
+    
+    // Flatten matrices A and B
+    float* A_flat = new float[ARows * ACols];
+    float* B_flat = new float[ACols * BCols];
+    for (int i = 0; i < ARows; ++i) {
+        for (int j = 0; j < ACols; ++j) {
+            A_flat[i * ACols + j] = matrixA[i][j];
+        }
+    }
+    for (int i = 0; i < ACols; ++i) {
+        for (int j = 0; j < BCols; ++j) {
+            B_flat[i * BCols + j] = matrixB[i][j];
+        }
+    }
+    
+    float* C_flat = new float[ARows * BCols];
+
+    float *d_A, *d_B, *d_C;
+    cudaMalloc(&d_A, ARows * ACols * sizeof(float));
+    cudaMalloc(&d_B, ACols * BCols * sizeof(float));
+    cudaMalloc(&d_C, ARows * BCols * sizeof(float));
+
+    cudaMemcpy(d_A, A_flat, ARows * ACols * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B_flat, ACols * BCols * sizeof(float), cudaMemcpyHostToDevice);
+
+    dim3 threadsPerBlock(TILE_WIDTH, TILE_WIDTH);
+    dim3 blocksPerGrid((BCols + TILE_WIDTH - 1) / TILE_WIDTH, (ARows + TILE_WIDTH - 1) / TILE_WIDTH);
+
+    matmulKernel<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, ARows, ACols, BCols);
+
+    cudaMemcpy(C_flat, d_C, ARows * BCols * sizeof(float), cudaMemcpyDeviceToHost);
+
+    // Reconstruct matrix C from C_flat
+    matrixC.resize(ARows);
+    for (int i = 0; i < ARows; ++i) {
+        matrixC[i].resize(BCols);
+        for (int j = 0; j < BCols; ++j) {
+            matrixC[i][j] = C_flat[i * BCols + j];
+        }
+    }
+
+    delete[] A_flat;
+    delete[] B_flat;
+    delete[] C_flat;
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+}
 
 #ifdef COMPILE_MAIN
 int main(int argc, char* argv[]) {
@@ -110,43 +162,11 @@ int main(int argc, char* argv[]) {
     std::cout << "\nMatrix B (" << n << "x" << p << "):\n";
     printMatrix(matrixB);
 
-        // Flatten matrices
-    float* A_flat = flattenMatrix(matrixA, m, n);
-    float* B_flat = flattenMatrix(matrixB, n, p);
-    float* C_flat = new float[m * p];
+    std::vector<std::vector<float>> matrixC;
+    matmul(matrixA, matrixB, matrixC, m, n, p);
 
-    // CUDA memory allocation
-    float *d_A, *d_B, *d_C;
-    cudaMalloc(&d_A, m * n * sizeof(float));
-    cudaMalloc(&d_B, n * p * sizeof(float));
-    cudaMalloc(&d_C, m * p * sizeof(float));
-
-    cudaMemcpy(d_A, A_flat, m * n * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, B_flat, n * p * sizeof(float), cudaMemcpyHostToDevice);
-
-    //const int TILE_WIDTH = 16;
-    dim3 threadsPerBlock(TILE_WIDTH, TILE_WIDTH);
-    dim3 blocksPerGrid((p + TILE_WIDTH - 1) / TILE_WIDTH, (m + TILE_WIDTH - 1) / TILE_WIDTH);
-
-    matmulKernel<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, m, n, p);
-
-    cudaMemcpy(C_flat, d_C, m * p * sizeof(float), cudaMemcpyDeviceToHost);
-
-    std::vector<std::vector<float>> matrixC(m, std::vector<float>(p));
-    for (int i = 0; i < m; ++i) {
-        for (int j = 0; j < p; ++j) {
-            matrixC[i][j] = C_flat[i * p + j];
-        }
-    }
     std::cout << "\nResult Matrix C (" << m << "x" << p << "):\n";
     printMatrix(matrixC);
-
-    delete[] A_flat;
-    delete[] B_flat;
-    delete[] C_flat;
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_C);
 
     return 0;
 }

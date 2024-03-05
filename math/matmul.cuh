@@ -6,6 +6,6 @@
 #define BLOCK_SIZE 256
 #define TILE_WIDTH 16
 
-__global__ void matmul(float* A, float* B, float* C, int ARows, int ACols, int BCols);
+void matmul(const std::vector<std::vector<float>>& matrixA, const std::vector<std::vector<float>>& matrixB, std::vector<std::vector<float>>& matrixC, int ARows, int ACols, int BCols);
 
 #endif
