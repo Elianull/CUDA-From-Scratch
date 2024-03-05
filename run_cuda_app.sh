@@ -11,6 +11,7 @@ fi
 FILENAME=$1
 DIRNAME=$(dirname "$FILENAME")
 BASENAME=$(basename "$FILENAME" .cu)
+PARENTDIR=$(dirname "$DIRNAME")
 shift
 
 # Directory to place the compiled binary
@@ -21,15 +22,14 @@ echo "Cleaning old compilation files..."
 rm -f "${BINDIR}"/*.o 
 
 echo "Compiling the main CUDA file with 'COMPILE_MAIN' defined: $FILENAME"
-# Compile the specified .cu file with COMPILE_MAIN defined
 nvcc -D COMPILE_MAIN -c "$FILENAME" -o "${BINDIR}/${BASENAME}.o"
 
 echo "Compiling dependency CUDA files without 'COMPILE_MAIN':"
 declare -A JOBS # Associative array to hold job IDs and their corresponding commands
-for file in $(find "$DIRNAME" -maxdepth 1 -type f -name '*.cu' ! -name "$(basename "$FILENAME")"); do
+for file in $(find "$PARENTDIR" -type f -name '*.cu' ! -name "$(basename "$FILENAME")"); do
     OBJ_NAME="${BINDIR}/$(basename "$file" .cu).o"
     echo "Compiling $file -> $OBJ_NAME"
-    nvcc -c "$file" -o "$OBJ_NAME" &
+    nvcc -c "$file" -o "$OBJ_NAME" -I"$PARENTDIR" &
     JOBS[$!]=$file
 done
 
@@ -44,7 +44,7 @@ check_jobs() {
             local OBJ_NAME="${BINDIR}/$(basename "$file" .cu).o"
             local retry=0
             while [ $retry -lt $retries ]; do
-                nvcc -c "$file" -o "$OBJ_NAME"
+                nvcc -c "$file" -o "$OBJ_NAME" -I"$PARENTDIR"
                 if [ $? -eq 0 ]; then
                     echo "Compilation succeeded for $file after retry."
                     break
@@ -66,7 +66,7 @@ check_jobs JOBS
 
 echo "Linking all object files to create the executable..."
 OBJFILES=$(find "$BINDIR" -type f -name '*.o')
-nvcc $OBJFILES -o "${BINDIR}/${BASENAME}"
+nvcc $OBJFILES -o "${BINDIR}/${BASENAME}" -lcurand -lineinfo
 
 echo "Compilation complete. Executable is: ${BINDIR}/${BASENAME}"
 

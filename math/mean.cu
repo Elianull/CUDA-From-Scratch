@@ -5,6 +5,13 @@
 
 #define BLOCK_SIZE 256 // Number of threads per block
 
+#define cudaCheckError() { \
+    cudaError_t err = cudaGetLastError(); \
+    if (err != cudaSuccess) { \
+        fprintf(stderr, "CUDA error: %s at %s:%d\n", cudaGetErrorString(err), __FILE__, __LINE__); \
+    } \
+}
+
 __global__ void mean(float *input, float *output, int len) {
     __shared__ float shared[BLOCK_SIZE];
     int tid = threadIdx.x;
@@ -43,6 +50,7 @@ int main(int argc, char *argv[]) {
 
     // Assuming N is not too large for a single block
     mean<<<1, BLOCK_SIZE>>>(d_input, d_output, N);
+    cudaCheckError();
 
     float result;
     cudaMemcpy(&result, d_output, sizeof(int), cudaMemcpyDeviceToHost);
