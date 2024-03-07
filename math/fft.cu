@@ -4,7 +4,9 @@
 #include <cuda_runtime.h>
 #include <cuComplex.h>
 
-const float PI = 2*acos(0.0);
+#ifndef M_PI
+#define M_PI (3.14159265358979323846)
+#endif
 
 __global__ void fftBreakdown(cuFloatComplex* input, cuFloatComplex* output, int size) {
     extern __shared__ cuFloatComplex sharedInput[];
@@ -58,53 +60,6 @@ std::vector<std::vector<cuFloatComplex>> fftBreakdownHost(std::vector<cuFloatCom
 
     return output;
 }
-
-// __global__ void dftKernel(cuFloatComplex* input, cuFloatComplex* output, int size) {
-//     int tid = threadIdx.x;
-//     int bid = blockIdx.x;
-//     int idx = bid * blockDim.x + tid;
-//     int numPairs = size / 2;
-
-//     if (idx < numPairs) {
-//         cuFloatComplex x = input[idx*2];
-//         cuFloatComplex y = input[idx*2 + 1];
-
-//         float angle = -2.0f * M_PI * idx / numPairs;
-//         cuFloatComplex twiddle = make_cuFloatComplex(cos(angle), sin(angle));
-
-//         output[idx*2] = cuCaddf(x, cuCmulf(y, twiddle));
-//         output[idx*2 + 1] = cuCsubf(x, cuCmulf(y, twiddle));
-//     }
-// }
-
-// __global__ void dftKernel(cuFloatComplex* d_input, cuFloatComplex* d_output, int N) {
-//     int idx = threadIdx.x + blockIdx.x * blockDim.x;
-
-//     if (idx < N/2) {
-//         cuFloatComplex x = d_input[idx * 2];
-//         cuFloatComplex y = d_input[idx * 2 + 1];
-
-//         cuFloatComplex sum_x = make_cuFloatComplex(0.0f, 0.0f);
-//         cuFloatComplex sum_y = make_cuFloatComplex(0.0f, 0.0f);
-
-//         for (int n = 0; n < 2; n++) {
-//             float angle_x = -2.0f * M_PI * 0 * n / 2.0f;
-//             float angle_y = -2.0f * M_PI * 1 * n / 2.0f;
-
-//             cuFloatComplex exp_term_x = make_cuFloatComplex(cosf(angle_x), sinf(angle_x));
-//             cuFloatComplex exp_term_y = make_cuFloatComplex(cosf(angle_y), sinf(angle_y));
-
-//             cuFloatComplex product_x = cuCmulf(x, exp_term_x);
-//             cuFloatComplex product_y = cuCmulf(y, exp_term_y);
-
-//             sum_x = cuCaddf(sum_x, product_x);
-//             sum_y = cuCaddf(sum_y, product_y);
-//         }
-
-//         d_output[idx * 2] = sum_x;
-//         d_output[idx * 2 + 1] = sum_y;
-//     }
-// }
 
 __global__ void dft_kernel(cuFloatComplex* input, cuFloatComplex* output, uint32_t N, uint32_t numPairs)
 {
