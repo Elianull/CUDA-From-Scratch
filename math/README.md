@@ -110,10 +110,10 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 
 ### Fast Fourier Transform (FFT)
 
-- Functionality: Implements the Cooley-Tukey FFT algorithm for complex-valued input.
 
--  **Lessons Learned**:
+- **Functionality**:  Implements the Cooley-Tukey FFT algorithm for complex-valued input.
 
+- **Lessons Learned**:
   - The Cooley-Tukey algorithm and butterfly operations took some time to fully grasp and implement correctly.
   
   - Bit-reversal permutation was a tricky step, requiring careful indexing and bit manipulation.
