@@ -107,6 +107,29 @@ This document outlines the CUDA functions I've implemented, focusing on key take
   - Compilation script fixes in the case of dependencies
 
 
+
+### Fast Fourier Transform (FFT)
+
+- Functionality: Implements the Cooley-Tukey FFT algorithm for complex-valued input.
+
+-  **Lessons Learned**:
+
+  - The Cooley-Tukey algorithm and butterfly operations took some time to fully grasp and implement correctly.
+  
+  - Bit-reversal permutation was a tricky step, requiring careful indexing and bit manipulation.
+  
+  - Precalculating twiddle factors and storing them in constant memory provided a noticeable performance boost.
+  
+  - Dividing the FFT into smaller sub-problems and utilizing shared memory greatly improved performance.
+  
+  - Debugging complex-valued operations and ensuring correct indexing throughout the FFT stages was a challenge.
+  
+  - Finding the optimal balance between parallelism and memory usage required experimentation with different thread block sizes and shared memory configurations.
+  
+  - Handling non-power-of-two input sizes required additional padding or truncation logic.
+  
+  - Comparing CUDA FFT results with a CPU reference implementation was crucial for validating correctness.
+
 ## TODOs
 
 
@@ -114,7 +137,6 @@ This document outlines the CUDA functions I've implemented, focusing on key take
 - Vector addition
 - Scalar multiplication
 - Vector normalization
-- Fast fourier transform
 - Eigenvalue calculation
 - Eigenvector calculation
 - Random number generation
