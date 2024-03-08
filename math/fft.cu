@@ -118,13 +118,63 @@ void performDFT(cuFloatComplex* input, cuFloatComplex* output, uint32_t N, uint3
     cudaFree(d_output);
 }
 
+__global__ void multiplyTwiddleFactors(cuFloatComplex* data, int n) {
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x;
+
+    for (int i = tid; i < n / 2; i += stride) {
+        float angle = -2 * M_PI * i / n;
+        cuFloatComplex twiddle = make_cuFloatComplex(cos(angle), sin(angle));
+
+        cuFloatComplex temp = cuCmulf(data[i + n / 2], twiddle);
+        data[i + n / 2] = cuCsubf(data[i], temp);
+        data[i] = cuCaddf(data[i], temp);
+    }
+}
+
+__global__ void bitReversalPermutation(cuFloatComplex* data, int n, int log2n) {
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x;
+
+    for (int i = tid; i < n; i += stride) {
+        int reversedIndex = __brev(i) >> (32 - log2n);
+        if (i < reversedIndex) {
+            cuFloatComplex temp = data[i];
+            data[i] = data[reversedIndex];
+            data[reversedIndex] = temp;
+        }
+    }
+}
+
+void multiplyTwiddleFactors(std::vector<cuFloatComplex>& data) {
+    int n = data.size();
+
+    for (int i = 0; i < n / 2; i++) {
+        int twiddleIndex = i;
+        float angle = -2 * M_PI * twiddleIndex / n;
+        cuFloatComplex twiddle = make_cuFloatComplex(cos(angle), sin(angle));
+
+        std::cout << "Twiddle factor for index " << i << ": (" << cuCrealf(twiddle) << ", " << cuCimagf(twiddle) << "i)" << std::endl;
+
+        cuFloatComplex temp = cuCmulf(data[i + n / 2], twiddle);
+        std::cout << "Multiplied element at index " << i + n / 2 << ": (" << cuCrealf(temp) << ", " << cuCimagf(temp) << "i)" << std::endl;
+
+        data[i + n / 2] = cuCaddf(data[i + n / 2], temp);
+        std::cout << "Updated element at index " << i + n / 2 << ": (" << cuCrealf(data[i + n / 2]) << ", " << cuCimagf(data[i + n / 2]) << "i)" << std::endl;
+
+        data[i] = cuCsubf(data[i], temp);
+        std::cout << "Updated element at index " << i << ": (" << cuCrealf(data[i]) << ", " << cuCimagf(data[i]) << "i)" << std::endl;
+
+        std::cout << std::endl;
+    }
+}
+
 std::vector<cuFloatComplex> computeFFT(std::vector<cuFloatComplex>& input) {
     int size = input.size();
     std::vector<cuFloatComplex> output(size);
 
     cuFloatComplex* d_input;
-    cudaMalloc(&d_input, size*sizeof(cuFloatComplex));
-
+    cudaMalloc(&d_input, size * sizeof(cuFloatComplex));
     cudaMemcpy(d_input, input.data(), size * sizeof(cuFloatComplex), cudaMemcpyHostToDevice);
 
     std::cout << "Input: ";
@@ -133,34 +183,63 @@ std::vector<cuFloatComplex> computeFFT(std::vector<cuFloatComplex>& input) {
     }
     std::cout << std::endl;
 
-    std::vector<std::vector<cuFloatComplex>> pairs = fftBreakdownHost(input);
+    int log2n = (int)log2(size); //log2 currently must be run on CPU
+
+    int blockSize = 256;
+    int numBlocks = (size + blockSize - 1) / blockSize;
+    bitReversalPermutation<<<numBlocks, blockSize>>>(d_input, size, log2n);
+
+    std::vector<cuFloatComplex> bitReversedData(size);
+    cudaMemcpy(bitReversedData.data(), d_input, size * sizeof(cuFloatComplex), cudaMemcpyDeviceToHost);
+    std::cout << "Bit reversal: ";
+    for (int i = 0; i < size; i++) {
+        std::cout << "(" << cuCrealf(bitReversedData[i]) << ", " << cuCimagf(bitReversedData[i]) << "i) ";
+    }
+    std::cout << std::endl;
+
+    std::vector<std::vector<cuFloatComplex>> pairs = fftBreakdownHost(bitReversedData);
     std::cout << "FFT Breakdown:" << std::endl;
     for (int i = 0; i < pairs.size(); i++) {
         std::cout << "Pair " << i << ": (" << cuCrealf(pairs[i][0]) << ", " << cuCimagf(pairs[i][0]) << "i) and ("
                   << cuCrealf(pairs[i][1]) << ", " << cuCimagf(pairs[i][1]) << "i)" << std::endl;
     }
-    
-        int N = 2;  // Assuming each pair has 2 elements
+
+    int N = 2;  // Assuming each pair has 2 elements
     int numPairs = pairs.size();
 
-    cuFloatComplex* dftOutput = new cuFloatComplex[N * numPairs];
+    cuFloatComplex* dftOutput;
+    cudaMalloc(&dftOutput, N * numPairs * sizeof(cuFloatComplex));
 
     // Convert the pairs vector to a flattened array
-    cuFloatComplex* flatPairs = new cuFloatComplex[N * numPairs];
+    cuFloatComplex* flatPairs;
+    cudaMalloc(&flatPairs, N * numPairs * sizeof(cuFloatComplex));
     for (int i = 0; i < numPairs; i++) {
-        flatPairs[i * N + 0] = pairs[i][0];
-        flatPairs[i * N + 1] = pairs[i][1];
+        cudaMemcpy(&flatPairs[i * N], pairs[i].data(), N * sizeof(cuFloatComplex), cudaMemcpyHostToDevice);
     }
 
     performDFT(flatPairs, dftOutput, N, numPairs);
 
     std::cout << "DFT Outputs: ";
     for (int i = 0; i < N * numPairs; i++) {
-        std::cout << "(" << cuCrealf(dftOutput[i]) << ", " << cuCimagf(dftOutput[i]) << "i) ";
+        cuFloatComplex temp;
+        cudaMemcpy(&temp, &dftOutput[i], sizeof(cuFloatComplex), cudaMemcpyDeviceToHost);
+        std::cout << "(" << cuCrealf(temp) << ", " << cuCimagf(temp) << "i) ";
     }
     std::cout << std::endl;
 
-    return input;
+    multiplyTwiddleFactors<<<numBlocks, blockSize>>>(dftOutput, size);
+
+    // Copy the final FFT output back to the host
+    cudaMemcpy(output.data(), dftOutput, size * sizeof(cuFloatComplex), cudaMemcpyDeviceToHost);
+
+    //multiplyTwiddleFactors(output);
+
+    // Free device memory
+    cudaFree(d_input);
+    cudaFree(dftOutput);
+    cudaFree(flatPairs);
+
+    return output;
 }
 
 #ifdef COMPILE_MAIN
@@ -171,18 +250,20 @@ int main(int argc, char *argv[]) {
     }
 
     int size = (argc - 1) / 2;
-    size_t bytes = size * sizeof(float);
-
-    float *real_values = (float*)malloc(bytes);
-    float *imaginary_values = (float*)malloc(bytes);
     std::vector<cuFloatComplex> complex_values(size);
 
     for (int i = 0; i < 2 * size; i += 2) {
         int index = i / 2;
         complex_values[index] = make_cuFloatComplex(std::atof(argv[1 + i]), std::atof(argv[2 + i]));
     }
-    
+
     std::vector<cuFloatComplex> fft_result = computeFFT(complex_values);
+
+    std::cout << "FFT Outputs: ";
+    for (int i = 0; i < size; i++) {
+        std::cout << "(" << cuCrealf(fft_result[i]) << ", " << cuCimagf(fft_result[i]) << "i) ";
+    }
+    std::cout << std::endl;
 
     return 0;
 }
